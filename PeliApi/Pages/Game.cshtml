@@ -1,0 +1,144 @@
+﻿@page
+@model PeliApi.Pages.GameModel
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong Game</title>
+    <style>
+
+        /* Add styles for your Pong game here, e.g., paddles, ball, etc. */
+        #gameContainer {
+            /* Example styles */
+            width: 600px;
+            height: 300px;
+            border: 1px solid black;
+            position: relative;
+        }
+        
+        .paddle {
+            width: 10px;
+            height: 20px;
+            background-color: black;
+            position: absolute;
+        }
+
+        .paddle2 {
+            width: 10px;
+            height: 300px;
+            background-color: black;
+            position: absolute;
+        }
+        
+        .ball {
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            position: absolute;
+        }
+
+        #restartButton {
+            display: none;
+        }
+
+        #playerName {
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="gameContainer">
+    <div id="player1" class="paddle" style="left: 0;"></div>
+    <div id="player2" class="paddle2" style="right: 0;"></div>
+    <div id="ball" class="ball"></div>
+</div>
+    <div id="scoreDisplay">Score: 0</div>
+    <input type="text" id="playerName" name="playerName" placeholder="Player Name" style="display: none;">
+    <input type="text" id="playerName" name="playerName" style="display: none;">
+    <button id="submitScoreButton" onclick="submitScore()" style="display: none;">Submit Score</button>
+    <button id="restartButton" onclick="restartGame()">Restart Game</button>
+
+
+
+<script>
+        let gameState = null;  // Declare gameState globally
+
+        async function fetchGameState() {
+            //console.log("Fetching game state...");
+            try {
+                const response = await fetch('/api/game/state');
+                if (!response.ok) {
+                    //console.error("Failed to fetch game state:", await response.text());
+                    return;
+                }
+
+                const responseData = await response.text();
+                gameState = JSON.parse(responseData);  // Parse the raw data to JSON and set the global gameState
+
+                document.getElementById('player1').style.top = gameState.player1.yPosition + "px";
+                document.getElementById('player2').style.top = gameState.player2.yPosition + "px";
+                document.getElementById('ball').style.left = gameState.ball.xPosition + "px";
+                document.getElementById('ball').style.top = gameState.ball.yPosition + "px";
+
+                // Logic to display or hide the restart button based on the game state
+                if (gameState && !gameState.state.value) {
+                    document.getElementById("restartButton").style.display = "block";
+                    document.getElementById("restartButton").style.display = "block";
+                    document.getElementById("playerName").style.display = "block";
+                    document.getElementById("submitScoreButton").style.display = "block";
+                } else {
+                    document.getElementById("restartButton").style.display = "none";
+                    document.getElementById("restartButton").style.display = "none";
+                    document.getElementById("playerName").style.display = "none";
+                    document.getElementById("submitScoreButton").style.display = "none";
+                }
+                document.getElementById('scoreDisplay').innerText = "Score: " + gameState.player1.score;
+            } catch (error) {
+                //console.error("Error fetching game state:", error);
+            }
+        }
+
+        document.addEventListener('keydown', async (event) => {
+            if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+                const direction = { Up: event.key === 'ArrowUp', Down: event.key === 'ArrowDown' };
+                await fetch('/api/game/movePlayer1', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(direction)
+                });
+                fetchGameState();  // Update game state after movement
+            }
+        });
+
+        setInterval(async () => {
+            await fetch('/api/game/updateBall', { method: 'POST' });
+            fetchGameState();  // Get the updated game state
+        }, 100);  // Every 100ms, adjust as needed
+
+        // Initial fetch
+        fetchGameState();
+
+        function restartGame() {
+            fetch('/api/game/reset', {
+                method: 'POST'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data === "Game reset.") {
+                        // Here, you'd also reset the game state on the client-side,
+                        // maybe redraw the game canvas, reset scores on the UI, etc.
+                        document.getElementById('restartButton').style.display = 'none';
+                    }
+                });
+        }
+
+</script>
+
+</body>
+</html>
