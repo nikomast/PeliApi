@@ -20,13 +20,13 @@ namespace PeliApi.Services
                 DateAdded = DateTime.UtcNow
             };
 
-            _context.Scores.Add(highScore);
+            _context.HighScores.Add(highScore);
             _context.SaveChanges();
         }
 
         public List<HighScore> GetHighScores()
         {
-            return _context.Scores
+            return _context.HighScores
                 .OrderByDescending(s => s.Score)
                 .Take(10)
                 .ToList();

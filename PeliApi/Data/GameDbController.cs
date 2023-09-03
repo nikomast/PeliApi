@@ -5,7 +5,7 @@ namespace PeliApi.Data
 {
     public class PongDbContext : DbContext
     {
-        public DbSet<HighScore> Scores { get; set; }
+        public DbSet<HighScore> HighScores { get; set; }
 
         // This constructor allows us to pass in configuration options
         public PongDbContext(DbContextOptions<PongDbContext> options) : base(options)

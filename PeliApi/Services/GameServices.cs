@@ -1,4 +1,5 @@
-﻿using PeliApi.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using PeliApi.Models;
 
 namespace PeliApi.Services
 {
@@ -31,11 +32,6 @@ namespace PeliApi.Services
 
         public void UpdateBallPosition()
         {
-            if (CurrentState.state.value == true)
-            {
-                _logger.LogInformation("true");
-            }
-            else _logger.LogInformation("false");
 
             if (CurrentState.state.value == true)
             {
@@ -65,14 +61,14 @@ namespace PeliApi.Services
                 {
                     CurrentState.Ball.XVelocity = -CurrentState.Ball.XVelocity;
                     CurrentState.Player1.Score += 1;
-                    _logger.LogInformation("+1" + CurrentState.Player1.Score);
+                    //_logger.LogInformation("+1" + CurrentState.Player1.Score);
                 }
 
                 // Check if ball goes behind Player 1's paddle
                 if (CurrentState.Ball.XPosition <= 0)
                 {
                     EndGame();
-                    _logger.LogInformation("Player1" + CurrentState.Player1.Score);
+                    //_logger.LogInformation("Player1" + CurrentState.Player1.Score);
                     return; // Stops updating the ball's position after game ends
                 }
             }

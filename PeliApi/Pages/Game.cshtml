@@ -56,17 +56,23 @@
     <div id="player2" class="paddle2" style="right: 0;"></div>
     <div id="ball" class="ball"></div>
 </div>
-    <div id="scoreDisplay">Score: 0</div>
+    <h4 id="playerScore"></h4>
     <input type="text" id="playerName" name="playerName" placeholder="Player Name" style="display: none;">
     <input type="text" id="playerName" name="playerName" style="display: none;">
     <button id="submitScoreButton" onclick="submitScore()" style="display: none;">Submit Score</button>
-    <button id="restartButton" onclick="restartGame()">Restart Game</button>
+    <button id="restartButton" style="display: none;" onclick="restartGame()">Restart Game</button>
+    <h2 id="loadText" style="display: none;">Loading.....</h2>
+    <div id="scoresSection" style="display: none;">
+        <h2>Top Scores</h2>
+        <ul id="scoreList"></ul>
+    </div>
+
 
 
 
 <script>
         let gameState = null;  // Declare gameState globally
-
+        let test = 0;
         async function fetchGameState() {
             //console.log("Fetching game state...");
             try {
@@ -85,20 +91,13 @@
                 document.getElementById('ball').style.top = gameState.ball.yPosition + "px";
 
                 // Logic to display or hide the restart button based on the game state
-                if (gameState && !gameState.state.value) {
-                    document.getElementById("restartButton").style.display = "block";
-                    document.getElementById("restartButton").style.display = "block";
-                    document.getElementById("playerName").style.display = "block";
-                    document.getElementById("submitScoreButton").style.display = "block";
-                } else {
-                    document.getElementById("restartButton").style.display = "none";
-                    document.getElementById("restartButton").style.display = "none";
-                    document.getElementById("playerName").style.display = "none";
-                    document.getElementById("submitScoreButton").style.display = "none";
+                if (gameState && !gameState.state.value && test == 0) {
+                    fetchTopScores(); 
+                    document.getElementById("loadText").style.display = "block";
                 }
-                document.getElementById('scoreDisplay').innerText = "Score: " + gameState.player1.score;
+                document.getElementById('playerScore').innerText = "Score: " + gameState.player1.score;
             } catch (error) {
-                //console.error("Error fetching game state:", error);
+                console.error("Error fetching game state:", error);
             }
         }
 
@@ -125,6 +124,8 @@
         fetchGameState();
 
         function restartGame() {
+            hideTopScores();
+            test = 0;
             fetch('/api/game/reset', {
                 method: 'POST'
             })
@@ -133,10 +134,48 @@
                     if (data === "Game reset.") {
                         // Here, you'd also reset the game state on the client-side,
                         // maybe redraw the game canvas, reset scores on the UI, etc.
-                        document.getElementById('restartButton').style.display = 'none';
                     }
                 });
         }
+
+        async function fetchTopScores() {
+            try {
+                let response = await fetch("/api/highscores/top/5");
+                if (!response.ok) {
+                    console.error('Failed to fetch top scores:', response.statusText);
+                    return;
+                }
+                let data = await response.json();
+                console.log("Fetched data from API:", data);
+
+                if (data && data.length) {
+                    displayTopScores(data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch top scores:", error);
+            }
+        }
+
+        function displayTopScores(scores) {
+            test = 1;
+            let scoreList = document.getElementById("scoreList");
+            scoreList.innerHTML = scores.map(score => `<li>${score.playerName}: ${score.score}</li>`).join('');
+            document.getElementById("loadText").style.display = "none";
+            document.getElementById("restartButton").style.display = "block";
+            document.getElementById("playerName").style.display = "block";
+            document.getElementById("submitScoreButton").style.display = "block";
+            document.getElementById("scoresSection").style.display = "block";
+        }
+
+    function hideTopScores() {
+            document.getElementById("restartButton").style.display = "none";
+            document.getElementById("playerName").style.display = "none";
+            document.getElementById("submitScoreButton").style.display = "none";
+            document.getElementById("scoresSection").style.display = "none";
+    }
+
+
+
 
 </script>
 
