@@ -56,9 +56,9 @@
     <div id="player2" class="paddle2" style="right: 0;"></div>
     <div id="ball" class="ball"></div>
 </div>
+    <h4 id="toTheMoon" style="display: none;"> Ei tolla kuuhun mennä</h4>
     <h4 id="playerScore"></h4>
     <input type="text" id="playerName" name="playerName" placeholder="Player Name" style="display: none;">
-    <input type="text" id="playerName" name="playerName" style="display: none;">
     <button id="submitScoreButton" onclick="submitScore()" style="display: none;">Submit Score</button>
     <button id="restartButton" style="display: none;" onclick="restartGame()">Restart Game</button>
     <h2 id="loadText" style="display: none;">Loading.....</h2>
@@ -168,12 +168,53 @@
         }
 
     function hideTopScores() {
+            document.getElementById("toTheMoon").style.display = "none";
             document.getElementById("restartButton").style.display = "none";
             document.getElementById("playerName").style.display = "none";
             document.getElementById("submitScoreButton").style.display = "none";
             document.getElementById("scoresSection").style.display = "none";
     }
 
+        async function submitScore() {
+            // Get player name and score
+            const playerNameInput = document.getElementById("playerName");
+            const playerName = playerNameInput.value;
+            const playerScore = gameState ? gameState.player1.score : 0; // or wherever you are storing the score
+
+            // Data to send to the server
+            const scoreData = {
+                PlayerName: playerName,
+                Score: playerScore
+            };
+            console.log("Sending score data:", scoreData);
+
+            try {
+                const response = await fetch("/api/highscores/record", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(scoreData)
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to submit score:', await response.text());
+                    document.getElementById("toTheMoon").style.display = "block";
+                    document.getElementById("submitScoreButton").style.display = "none";
+                    document.getElementById("playerName").style.display = "none";
+                    return;
+                }
+
+                const responseData = await response.text();
+                console.log("Response from server:", responseData);
+
+                // Optionally fetch top scores again to update the list
+                fetchTopScores();
+
+            } catch (error) {
+                console.error("Error submitting score:", error);
+            }
+        }
 
 
 
